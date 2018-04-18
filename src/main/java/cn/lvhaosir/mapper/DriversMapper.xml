@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.chebida.mapper.DriversMapper" >
+  <resultMap id="BaseResultMap" type="cn.chebida.entity.Drivers" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="driver_id" property="driverId" jdbcType="INTEGER" />
+    <result column="driver_name" property="driverName" jdbcType="VARCHAR" />
+    <result column="age" property="age" jdbcType="INTEGER" />
+    <result column="sex" property="sex" jdbcType="CHAR" />
+    <result column="driver_age" property="driverAge" jdbcType="INTEGER" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="id_card" property="idCard" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <select id="queryLike" parameterType="cn.chebida.entity.Drivers" resultMap="BaseResultMap" >
+  	select * from drivers where 1=1
+  	 <if test="driverName!=null">
+  	 	and driver_name like CONCAT('%','${driverName}','%')  
+ 	 </if>
+ 	 <if test="idCard!=null">
+  	 	and id_card like CONCAT('%','${idCard}','%')  
+ 	 </if>
+  </select>
+  
+</mapper>

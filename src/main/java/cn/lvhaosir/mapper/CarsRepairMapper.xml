@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.chebida.mapper.CarsRepairMapper" >
+  <resultMap id="BaseResultMap" type="cn.chebida.entity.CarsRepair" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="cars_repair_id" property="carsRepairId" jdbcType="INTEGER" />
+    <result column="cars_repair_type" property="carsRepairType" jdbcType="VARCHAR" />
+    <result column="cars_repair_text" property="carsRepairText" jdbcType="VARCHAR" />
+    <result column="car_id" property="carId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <select id="queryAllOrderby" parameterType="cn.chebida.entity.CarsRepair" resultMap="BaseResultMap" >
+  	select * from cars_repair where 1=1
+  	 <if test="carId!=null">
+ 	 	and car_id=#{carId}
+ 	 </if>
+ 	 order by create_time desc
+  </select>
+  
+  
+</mapper>

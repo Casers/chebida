@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="chebida:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="chebida.war">
+      <element id="artifact" artifact-name="chebida:war exploded" />
+    </root>
+  </artifact>
+</component>

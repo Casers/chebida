@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/context 
+       http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/util 
+       http://www.springframework.org/schema/util/spring-util-3.0.xsd 
+       http://www.springframework.org/schema/mvc 
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd
+      ">
+
+	<!-- 扫包 -->
+	<context:component-scan base-package="cn.lvhaosir.controller" />
+
+	<!-- start json -->
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="cacheSeconds" value="0" />
+		<property name="messageConverters">
+			<list>
+				<ref bean="mappingJackson2HttpMessageConverter" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="mappingJackson2HttpMessageConverter"
+		class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<value>application/json;charset=UTF-8</value>
+				<value>text/html;charset=UTF-8</value>
+				<value>text/json;charset=UTF-8</value>
+			</list>
+		</property>
+	</bean>
+	<!-- end json -->
+
+
+	<!-- 视图渲染 jsp/freemaker/velocity -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<!-- 制定页面存放的路径 -->
+		<property name="prefix" value="/"></property>
+		<!-- 文件的后缀 -->
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+
+	<!-- 上传文件解析器 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="104856700" />
+		<property name="defaultEncoding" value="utf-8"></property>
+	</bean>
+	
+	<!-- 配置用于session验证的拦截器 -->
+	<!-- 如果有多个拦截器满足拦截处理的要求，则依据配置的先后顺序来执行 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<!-- 拦截所有的请求，这个必须写在前面，也就是写在【不拦截】的上面 -->
+			<mvc:mapping path="/**" />
+			<!-- 但是排除下面这些，也就是不拦截请求 -->
+			<mvc:exclude-mapping path="/users/login.action" />
+			<bean class="cn.lvhaosir.interceptors.SessionInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+</beans>
