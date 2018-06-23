@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>布局模板</title>
+<link rel="stylesheet" type="text/css"
+	href="UI/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="UI/themes/icon.css" />
+<script type="text/javascript" src="Scripts/jquery-1.8.2.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/jquery.easyui.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/locale/easyui-lang-zh_CN.js"
+	charset="utf-8"></script>
+</head>
+<body>
+	<script type="text/javascript">
+		$(function() {
+			$('#driversTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 380,
+				width : 900,
+				toolbar : [
+						{
+							iconCls : 'icon-add',
+							text : '新增',
+							handler : function() {
+								addDrivers();
+							}
+						},
+						'-',
+						{
+							iconCls : 'icon-edit',
+							text : '修改',
+							handler : function() {
+								var row = $('#driversTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									updateDrivers(row);
+								}
+							}
+						} ,
+						'-' ,
+						{
+							iconCls : 'icon-remove',
+							text : '删除',
+							handler : function() {
+								var row = $('#driversTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									deleteDrivers(row.driverId);
+								}
+							}
+						}  ],
+				columns : [ [ 
+				{
+					field : 'driverName',
+					title : '姓名',
+					formatter:function(value,row,index){
+						return '<a href="drivers/queryDriver.action?driverId='+row.driverId+'" target="_blank" >'+row.driverName+'</a>';
+					}
+				} , {
+					field : 'age',
+					title : '年龄'
+				} , {
+					field : 'sex',
+					title : '性别'
+				} , {
+					field : 'driverAge',
+					title : '驾龄/年'
+				} , {
+					field : 'phone',
+					title : '联系方式'
+				} , {
+					field : 'idCard',
+					title : '身份证号'
+				} , {
+					field : 'address',
+					title : '详细住址'
+				},{
+					field : 'status',
+					title : '状态'
+				},{
+					field : 'driverId',
+					title : '车辆信息',
+					formatter:function(value,row,index){
+						return '<a href="cars/queryCars.action?driverId='+row.driverId+'" target="_blank" >查看</a>';
+					}
+				} ] ],
+				url : 'drivers/queryAllDrivers.action'
+			});
+		});
+		function addDrivers() {
+			//首先置空
+			$('#myDriversAddForm').form('reset');
+			$('#driversAdd').show();
+			$('#driversAdd').dialog({
+				height : 430,
+				width : 360,
+				title : '新增司机',
+				modal :true,
+				buttons : [ {
+					text : '添加',
+					iconCls : 'icon-save',
+					handler : function() {
+						$('#myDriversAddForm').form('submit', {
+							url : 'drivers/saveUpdateDrivers.action',
+							success : function(rst) {
+								//对回馈的数据进行处理
+								var obj = eval(rst);  
+								if (obj== "true") {
+									$('#driversAdd').dialog('close');
+									$('#driversAdd').hide();
+									//刷新列表
+									$('#driversTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "添加失败!服务器异常!");
+								}
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function updateDrivers(row) {
+			$('#myDriversAddForm').form('reset');
+			$('#driversAdd').show();
+			//数据回显
+			$('#myDriversAddForm').form('load',row);
+			$('#driversAdd').dialog({
+				height : 430,
+				width : 360,
+				title : '修改司机信息',
+				modal :true,
+				buttons : [ {
+					text : '修改',
+					iconCls : 'icon-edit',
+					handler : function() {
+						$('#myDriversAddForm').form('submit', {
+							url : 'drivers/saveUpdateDrivers.action',
+							success : function(rst) {
+								//对回馈的数据进行处理
+								var obj = eval(rst);  
+								if (obj== "true") {
+									$('#driversAdd').dialog('close');
+									$('#driversAdd').hide();
+									//刷新列表
+									$('#driversTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "修改失败!服务器异常!");
+								}
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function deleteDrivers(id) {
+			$.ajax({
+				url : 'drivers/deleteDrivers.action?driverId='+id,
+				method : 'post',
+				success : function(rst) {
+					var obj = eval(rst);  
+					if(obj=="false"){
+						$.messager.alert('提示', "该类型正在被使用!");
+					}
+					//刷新列表
+					$('#driversTable').datagrid('reload');
+				}
+			});
+		}
+	</script>
+	<script type="text/javascript">
+	 function searchDrivers(value,name){
+		 $('#driversTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 380,
+				width : 900,
+				toolbar : [
+						{
+							iconCls : 'icon-add',
+							text : '新增',
+							handler : function() {
+								addDrivers();
+							}
+						},
+						'-',
+						{
+							iconCls : 'icon-edit',
+							text : '修改',
+							handler : function() {
+								var row = $('#driversTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									updateDrivers(row);
+								}
+							}
+						} ,
+						'-'  ,
+						{
+							iconCls : 'icon-remove',
+							text : '删除',
+							handler : function() {
+								var row = $('#driversTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									deleteDrivers(row.driverId);
+								}
+							}
+						}  ],
+						columns : [ [ 
+										{
+											field : 'driverName',
+											title : '姓名',
+											formatter:function(value,row,index){
+												return '<a href="drivers/queryDriver.action?driverId='+row.driverId+'" target="_blank" >'+row.driverName+'</a>';
+											}
+										} , {
+											field : 'age',
+											title : '年龄'
+										} , {
+											field : 'sex',
+											title : '性别'
+										} , {
+											field : 'driverAge',
+											title : '驾龄/年'
+										} , {
+											field : 'phone',
+											title : '联系方式'
+										} , {
+											field : 'idCard',
+											title : '身份证号'
+										} , {
+											field : 'address',
+											title : '详细住址'
+										},{
+											field : 'status',
+											title : '状态'
+										},{
+											field : 'driverId',
+											title : '车辆信息',
+											formatter:function(value,row,index){
+												return '<a href="cars/queryCars.action?driverId='+row.driverId+'" target="_blank" >查看</a>';
+											}
+										} ] ],
+				url : 'drivers/queryLikeDrivers.action?'+name+'='+value
+			});
+	 }
+	</script>
+	<input id="ssDrivers" class="easyui-searchbox" style="width:300px"
+	    data-options="searcher:searchDrivers,prompt:'Please Input Value',menu:'#driversOptions'"></input>
+	<div id="driversOptions" style="width:120px">
+	    <div data-options="name:'driverName',iconCls:'icon-ok'">姓名</div>
+	    <div data-options="name:'idCard',iconCls:'icon-ok'">身份证号</div>
+	</div>
+	<table id="driversTable" style="width: 400px; height: 400px"></table>
+	<div id="driversAdd" style="display: none; padding: 20px">
+		<form method="post" id="myDriversAddForm" enctype="multipart/form-data"  >
+			<table>
+				<tr>
+					<td>编号:</td>
+					<td><input type="text" id="driverId" readonly="readonly" name="driverId" /></td>
+				</tr>
+				<tr>
+					<td>姓名:</td>
+					<td><input type="text" id="driverName" name="driverName" class="easyui-validatebox" data-options="required:true" /></td>
+				</tr>
+				<tr>
+					<td>年龄:</td>
+					<td>
+						<select name="age" id="age" >
+							<option value="18">18</option>
+							<option value="19">19</option>
+							<option value="20">20</option>
+							<option value="21">21</option>
+							<option value="22">22</option>
+							<option value="23">23</option>
+							<option value="24">24</option>
+							<option value="25">25</option>
+							<option value="26">26</option>
+							<option value="27">27</option>
+							<option value="28">28</option>
+							<option value="29">29</option>
+							<option value="30">30</option>
+							<option value="31">31</option>
+							<option value="32">32</option>
+							<option value="33">33</option>
+							<option value="34">34</option>
+							<option value="35">35</option>
+							<option value="36">36</option>
+							<option value="37">37</option>
+							<option value="38">38</option>
+							<option value="39">39</option>
+							<option value="40">40</option>
+							<option value="41">41</option>
+							<option value="42">42</option>
+							<option value="43">43</option>
+							<option value="44">44</option>
+							<option value="45">45</option>
+							<option value="46">46</option>
+							<option value="47">47</option>
+							<option value="48">48</option>
+							<option value="49">49</option>
+							<option value="50">50</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>性别:</td>
+					<td>
+						男<input type="radio" name="sex" value="男" checked="checked" >女<input type="radio" name="sex" value="女" >
+					</td>
+				</tr>
+				<tr>
+					<td>驾龄:</td>
+					<td>
+						<select name="driverAge" id="driverAge">
+							<option value="1">1</option>
+							<option value="2">2</option>
+							<option value="3">3</option>
+							<option value="4">4</option>
+							<option value="5">5</option>
+							<option value="6">6</option>
+							<option value="7">7</option>
+							<option value="8">8</option>
+							<option value="9">9</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+							<option value="13">13</option>
+							<option value="14">14</option>
+							<option value="15">15</option>
+							<option value="16">16</option>
+							<option value="17">17</option>
+							<option value="18">18</option>
+							<option value="19">19</option>
+							<option value="20">20</option>
+							<option value="21">21</option>
+							<option value="22">22</option>
+							<option value="23">23</option>
+							<option value="24">24</option>
+							<option value="25">25</option>
+							<option value="26">26</option>
+							<option value="27">27</option>
+							<option value="28">28</option>
+							<option value="29">29</option>
+							<option value="30">30</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>联系方式:</td>
+					<td>
+						<input type="text" id="phone" name="phone" class="easyui-validatebox" data-options="required:true" />
+					</td>
+				</tr>
+				<tr>
+					<td>身份证号:</td>
+					<td>
+						<input type="text" id="idCard" name="idCard" class="easyui-validatebox" data-options="required:true" />
+					</td>
+				</tr>
+				<tr>
+					<td>住址:</td>
+					<td>
+						<input type="text" id="address" name="address" class="easyui-validatebox" data-options="required:true" />
+					</td>
+				</tr>
+				<tr>
+					<td>状态:</td>
+					<td>
+						在职<input type="radio" name="status" checked="checked" value="在职" > 离职<input type="radio" name="status" value="离职" >
+					</td>
+				</tr>
+				<tr>
+					<td>照片:</td>
+					<td>
+						<input class="easyui-filebox" id="filePhoto" name="filePhoto" data-options="required:true" style="width:100%" />
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</body>
+</html>

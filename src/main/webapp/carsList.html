@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>布局模板</title>
+<link rel="stylesheet" type="text/css"
+	href="UI/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="UI/themes/icon.css" />
+<script type="text/javascript" src="Scripts/jquery-1.8.2.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/jquery.easyui.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/locale/easyui-lang-zh_CN.js"
+	charset="utf-8"></script>
+</head>
+<body>
+	<script type="text/javascript">
+		$(function() {
+			$('#carsTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 400,
+				width : 900, 
+				toolbar : [
+						{
+							iconCls : 'icon-add',
+							text : '新增车辆信息',
+							handler : function() {
+								addCars();
+							}
+						},
+						'-',
+						{
+							iconCls : 'icon-edit',
+							text : '修改车辆信息',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									updateCars(row);
+								}
+							}
+						} ,
+						'-',
+						 {
+							iconCls : 'icon-remove',
+							text : '删除',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									deleteCar(row.carId);
+								}
+							}
+						},'-'  ,{
+							iconCls : 'icon-add',
+							text : '新增维修/保养记录',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中车辆!');
+								} else {
+									addCarsRepair(row.carId);
+								}
+							}
+						},'-',{
+							iconCls : 'icon-add',
+							text : '新增运营日里程/日营业额记录',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中车辆!');
+								} else {
+									addCarsMileage(row.carId);
+								}
+							}
+						}],
+				columns : [ [
+				{
+					field : 'carNumber',
+					title : '车牌号'
+				} , {
+					field : 'engineNumber',
+					title : '发动机号码',
+					formatter:function(value,row,index){
+						return '<a href="cars/queryCarsById.action?carId='+row.carId+'" target="_blank" >'+row.engineNumber+'</a>';
+					}
+				} , {
+					field : 'startTime',
+					title : '出厂日期'
+				} , {
+					field : 'endTime',
+					title : '年检到期'
+				} , {
+					field : 'driverId',
+					title : '司机信息',
+					formatter:function(value,row,index){
+						return '<a href="drivers/queryDriver.action?driverId='+row.driverId+'" target="_blank" >查看</a>';
+					}
+				} , {
+					field : 'carId',
+					title : '维修/保养记录',
+					formatter:function(value,row,index){
+						return '<a href="carsRepair/allCarsRepair.action?carId='+row.carId+'" target="_blank" >查看</a>';
+					}
+				}, {
+					field : 'CC',
+					title : '里程/日营业额记录',
+					formatter:function(value,row,index){
+						return '<a href="carsMileage/queryAllCarsMileage.action?carId='+row.carId+'" target="_blank" >查看记录</a>';
+					}
+				}] ],
+				url : 'cars/queryAllCars.action'
+			});
+		});
+		function addCars() {
+			//首先置空
+			$('#myCarsAddForm').form('reset');
+			//去加载司机信息
+			$('#carDriverId').combobox({    
+			    url:'drivers/allDrivers.action',    
+			    valueField:'driverId',    
+			    textField:'driverName'   
+			});
+			$('#carsAdd').show();
+			$('#carsAdd').dialog({
+				height : 350,
+				width : 380,
+				title : '新增车辆信息',
+				modal :true,
+				buttons : [ {
+					text : '添加',
+					iconCls : 'icon-save',
+					handler : function() {
+						$('#myCarsAddForm').form('submit', {
+							url:"cars/saveUpdateCars.action",
+							success : function(rst) {
+								//对回馈的数据进行处理
+								 var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsAdd').dialog('close');
+									$('#carsAdd').hide();
+									//刷新列表
+									$('#carsTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "添加失败!服务器异常!");
+								} 
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function updateCars(row) {
+			$('#myCarsAddForm').form('reset');
+			//去加载司机信息
+			$('#carDriverId').combobox({    
+			    url:'drivers/allDrivers.action',    
+			    valueField:'driverId',    
+			    textField:'driverName'   
+			});
+			$('#carsAdd').show();
+			//数据回显
+			$('#myCarsAddForm').form('load',row);
+			$('#carsAdd').dialog({
+				height : 350,
+				width : 380,
+				title : '修改车辆信息',
+				modal :true,
+				buttons : [ {
+					text : '修改',
+					iconCls : 'icon-edit',
+					handler : function() {
+						$('#myCarsAddForm').form('submit', {
+							url : 'cars/saveUpdateCars.action',
+							success : function(rst) {
+								//对回馈的数据进行处理
+								var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsAdd').dialog('close');
+									$('#carsAdd').hide();
+									//刷新列表
+									$('#carsTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "修改失败!服务器异常!");
+								}
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function deleteCar(id) {
+			$.ajax({
+				url : 'cars/deleteCars.action?carId='+id,
+				method : 'post',
+				success : function(rst) {
+					var obj = eval(rst);  
+					if(obj=="false"){
+						$.messager.alert('提示', "服务器异常!");
+					}
+					//刷新列表
+					$('#carsTable').datagrid('reload');
+				}
+			});
+		}
+		function addCarsRepair(carId) {
+			//首先置空
+			$('#myCarsRepairAddForm').form('reset');
+			
+			// 赋值汽车编号
+			$("#repairCarId").val(carId);
+			
+			$('#carsRepairAdd').show();
+			$('#carsRepairAdd').dialog({
+				height : 350,
+				width : 400,
+				title : '新增维修/保养记录',
+				modal :true,
+				buttons : [ {
+					text : '添加',
+					iconCls : 'icon-save',
+					handler : function() {
+						$('#myCarsRepairAddForm').form('submit', {
+							url:"carsRepair/saveCarsRepair.action",
+							success : function(rst) {
+								//对回馈的数据进行处理
+								 var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsRepairAdd').dialog('close');
+									$('#carsRepairAdd').hide();
+									//刷新列表
+									$('#carsTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "添加失败!服务器异常!");
+								} 
+							}
+						});
+					}
+				} ]
+			});
+		}
+		
+		function addCarsMileage(carId) {
+			//首先置空
+			$('#myCarsMileageAddForm').form('reset');
+			
+			// 赋值汽车编号
+			$("#mileageCarId").val(carId);
+			
+			$('#carsMileageAdd').show();
+			$('#carsMileageAdd').dialog({
+				height : 350,
+				width : 400,
+				title : '新增维修/保养记录',
+				modal :true,
+				buttons : [ {
+					text : '添加',
+					iconCls : 'icon-save',
+					handler : function() {
+						$('#myCarsMileageAddForm').form('submit', {
+							url:"carsMileage/saveCarsMileage.action",
+							success : function(rst) {
+								//对回馈的数据进行处理
+								 var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsMileageAdd').dialog('close');
+									$('#carsMileageAdd').hide();
+									//刷新列表
+									$('#carsTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "添加失败!服务器异常!");
+								} 
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function searchCars(value,name){
+			$('#carsTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 400,
+				width : 900, 
+				toolbar : [
+						{
+							iconCls : 'icon-add',
+							text : '新增车辆信息',
+							handler : function() {
+								addCars();
+							}
+						},
+						'-',
+						{
+							iconCls : 'icon-edit',
+							text : '修改车辆信息',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									updateCars(row);
+								}
+							}
+						} ,
+						'-',
+						 {
+							iconCls : 'icon-remove',
+							text : '删除',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中行!');
+								} else {
+									deleteCar(row.carId);
+								}
+							}
+						} ,{
+							iconCls : 'icon-add',
+							text : '新增维修/保养记录',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中车辆!');
+								} else {
+									addCarsRepair(row.carId);
+								}
+							}
+						},'-',{
+							iconCls : 'icon-add',
+							text : '新增运营日里程/日营业额记录',
+							handler : function() {
+								var row = $('#carsTable').datagrid('getSelected');
+								if (row == null) {
+									$.messager.alert('提示','请选中车辆!');
+								} else {
+									addCarsMileage(row.carId);
+								}
+							}
+						}],
+				columns : [ [
+				{
+					field : 'carNumber',
+					title : '车牌号'
+				} , {
+					field : 'engineNumber',
+					title : '发动机号码',
+					formatter:function(value,row,index){
+						return '<a href="cars/queryCarsById.action?carId='+row.carId+'" target="_blank" >'+row.engineNumber+'</a>';
+					}
+				} , {
+					field : 'startTime',
+					title : '出厂日期'
+				} , {
+					field : 'endTime',
+					title : '年检到期'
+				} , {
+					field : 'driverId',
+					title : '司机信息',
+					formatter:function(value,row,index){
+						return '<a href="drivers/queryDriver.action?driverId='+row.driverId+'" target="_blank" >查看</a>';
+					}
+				} , {
+					field : 'carId',
+					title : '维修/保养记录',
+					formatter:function(value,row,index){
+						return '<a href="carsRepair/allCarsRepair.action?carId='+row.carId+'" target="_blank" >查看</a>';
+					}
+				}, {
+					field : 'CC',
+					title : '里程/日营业额记录',
+					formatter:function(value,row,index){
+						return '<a href="carsMileage/queryAllCarsMileage.action?carId='+row.carId+'" target="_blank" >查看记录</a>';
+					}
+				}] ],
+				url : 'cars/queryLikeCars.action?'+name+'='+value
+			});
+		}
+	</script>
+	<input id="ssCars" class="easyui-searchbox" style="width:300px"
+	    data-options="searcher:searchCars,prompt:'Please Input Value',menu:'#carsOptions'"></input>
+	<div id="carsOptions" style="width:120px">
+	    <div data-options="name:'carNumber',iconCls:'icon-ok'">车牌号</div>
+	    <div data-options="name:'engineNumber',iconCls:'icon-ok'">发动机号码</div>
+	</div>
+	<table id="carsTable" style="width: 400px; height: 400px"></table>
+	<div id="carsAdd" style="display: none; padding: 20px">
+		<form method="post" id="myCarsAddForm" enctype="multipart/form-data" >
+			<table>
+				<tr>
+					<td>编号:</td>
+					<td><input type="text" id="carId" readonly="readonly" name="carId" /></td>
+				</tr>
+				<tr>
+					<td>车牌号:</td>
+					<td><input type="text" id="carNumber" name="carNumber" class="easyui-validatebox" data-options="required:true" /></td>
+				</tr>
+				<tr>
+					<td>发动机号码:</td>
+					<td><input type="text" id="engineNumber" name="engineNumber" class="easyui-validatebox" data-options="required:true" /></td>
+				</tr>
+				<tr>
+					<td>出厂日期:</td>
+					<td>
+						<input  style="width:100%"  id="startTime" name="startTime" type="text" class="easyui-datebox" required="required" />  
+					</td>
+				</tr>
+				<tr>
+					<td>年检到期:</td>
+					<td>
+						<input  style="width:100%"  id="endTime" name="endTime" type="text" class="easyui-datebox" required="required" />  
+					</td>
+				</tr>
+				<tr>
+					<td>司机:</td>
+					<td>
+						<input  style="width:100%"  id="carDriverId" name="driverId" required="required" />  
+					</td>
+				</tr>
+				<tr>
+					<td>照片:</td>
+					<td>
+						<input class="easyui-filebox" id="carPhoto" name="carPhoto" data-options="required:true" style="width:100%" />
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<div id="carsRepairAdd" style="display: none; padding: 20px">
+		<form method="post" id="myCarsRepairAddForm">
+			<table>
+				<tr>
+					<td>车辆编号:</td>
+					<td><input type="text" id="repairCarId" readonly="readonly" name="carId" /></td>
+				</tr>
+				<tr>
+					<td>类型:</td>
+					<td>
+						<select name="carsRepairType" id="carsRepairType" style="width:170px;" class="easyui-combobox" >
+						    <option value="维修">维修</option>   
+						    <option value="保养">保养</option>  
+						    <option value="其他">其他</option>   
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>备注:</td>
+					<td><textarea rows="10" cols="30"  id="carsRepairText" name="carsRepairText"  ></textarea></td>
+				</tr>
+				<tr>
+					<td>创建时间:</td>
+					<td><input class="easyui-datetimebox"  style="width:100%"  name="createTime" data-options="required:true,showSeconds:false"  style="width:173px">  </td>
+				</tr>
+				
+			</table>
+		</form>
+	</div>
+	<div id="carsMileageAdd" style="display: none; padding: 20px">
+		<form method="post" id="myCarsMileageAddForm">
+			<table>
+				<tr>
+					<td>车辆编号:</td>
+					<td><input type="text" id="mileageCarId" readonly="readonly" name="carId" /></td>
+				</tr>
+				<tr>
+					<td>里程:</td>
+					<td>
+						<input type="text" id="mileage"  name="mileage" data-options="suffix:'公里'" required="required" style="width:173px" class="easyui-numberbox" />
+					</td>
+				</tr>
+				<tr>
+					<td>营业额:</td>
+					<td>
+						<input type="text" id="sales"  name="sales" data-options="suffix:'元'" required="required" style="width:173px" class="easyui-numberbox" />
+					</td>
+				</tr>
+				<tr>
+					<td>创建时间:</td>
+					<td><input class="easyui-datetimebox" name="createTime" data-options="required:true,showSeconds:false"  style="width:173px">  </td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</body>
+</html>

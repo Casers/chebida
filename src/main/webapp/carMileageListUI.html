@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>布局模板</title>
+<link rel="stylesheet" type="text/css"
+	href="UI/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="UI/themes/icon.css" />
+<script type="text/javascript" src="Scripts/jquery-1.8.2.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/jquery.easyui.min.js"
+	charset="utf-8"></script>
+<script type="text/javascript" src="UI/locale/easyui-lang-zh_CN.js"
+	charset="utf-8"></script>
+</head>
+<body>
+	<script type="text/javascript">
+		$(function() {
+			$('#carsMileageTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 400,
+				width : 900, 
+				toolbar : [{
+					iconCls : 'icon-add',
+					text : '新增运营里程/日营业记录',
+					handler : function() {
+							addCarsMileage1();
+					}
+				},'-',
+					{
+						iconCls : 'icon-edit',
+						text : '修改',
+						handler : function() {
+							var row = $('#carsMileageTable').datagrid('getSelected');
+							if (row == null) {
+								$.messager.alert('提示','请选中行!');
+							} else {
+								updateCarsMileage(row);
+							}
+						}
+					} ,
+					'-',
+					 {
+						iconCls : 'icon-remove',
+						text : '删除',
+						handler : function() {
+							var row = $('#carsMileageTable').datagrid('getSelected');
+							if (row == null) {
+								$.messager.alert('提示','请选中行!');
+							} else {
+								deleteCarsMileage(row.carsMileageId);
+							}
+						}
+					} ],
+				columns : [ [
+				{
+					field : 'carsMileageId',
+					title : '编号'
+				} ,
+				{
+					field : 'carNumber',
+					title : '车牌号'
+				} ,
+				{
+					field : 'driverName',
+					title : '司机姓名'
+				},
+				{
+					field : 'mileage',
+					title : '里程/公里'
+				} , {
+					field : 'sales',
+					title : '营业额/元'
+				}, {
+					field : 'carId',
+					title : '车辆信息',
+					formatter:function(value,row,index){
+						return '<a href="cars/queryCarsById.action?carId='+row.carId+'" target="_blank" >查看</a>';
+					}
+				}  ] ],
+				url : 'carsMileage/queryAll.action'
+			});
+		});
+		function addCarsMileage1() {
+			//首先置空
+			$('#myCarsMileageUpdateForm').form('reset');
+			$('#carsMileageCarId').combobox({    
+			    url:'cars/queryAll.action',    
+			    valueField:'carId',    
+			    textField:'carNumber'   
+			});  
+			$('#carsMileageUpdate').show();
+			$('#carsMileageUpdate').dialog({
+				height : 350,
+				width : 400,
+				title : '新增维修/保养记录',
+				modal :true,
+				buttons : [ {
+					text : '添加',
+					iconCls : 'icon-save',
+					handler : function() {
+						$('#myCarsMileageUpdateForm').form('submit', {
+							url:"carsMileage/saveUpdateDeleteCarsMileage.action",
+							success : function(rst) {
+								//对回馈的数据进行处理
+								 var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsMileageUpdate').dialog('close');
+									$('#carsMileageUpdate').hide();
+									//刷新列表
+									$('#carsMileageTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "添加失败!服务器异常!");
+								} 
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function deleteCarsMileage(id) {
+			$.ajax({
+				url : 'carsMileage/saveUpdateDeleteCarsMileage.action?carsMileageId='+id,
+				method : 'post',
+				success : function(rst) {
+					var obj = eval(rst);  
+					if(obj=="false"){
+						$.messager.alert('提示', "服务器错误!");
+					}
+					//刷新列表
+					$('#carsMileageTable').datagrid('reload');
+				}
+			});
+		}
+		function updateCarsMileage(row) {
+			$('#myCarsMileageUpdateForm').form('reset');
+			
+			$('#carsMileageCarId').combobox({    
+			    url:'cars/queryAll.action',    
+			    valueField:'carId',    
+			    textField:'carNumber'   
+			});  
+			
+			$('#myCarsMileageUpdateForm').form('load',row);
+			$('#carsMileageUpdate').show();
+			//数据回显
+			$('#carsMileageUpdate').dialog({
+				height : 400,
+				width : 410,
+				title : '修改车辆信息',
+				modal :true,
+				buttons : [ {
+					text : '修改',
+					iconCls : 'icon-edit',
+					handler : function() {
+						$('#myCarsMileageUpdateForm').form('submit', {
+							url:"carsMileage/saveUpdateDeleteCarsMileage.action",
+							success : function(rst) {
+								//对回馈的数据进行处理
+								var obj = eval(rst);  
+								if (obj== "true") {
+									$('#carsMileageUpdate').dialog('close');
+									$('#carsMileageUpdate').hide();
+									//刷新列表
+									$('#carsMileageTable').datagrid('reload');
+								} else if(obj == "yicunzai") {
+									$.messager.alert('提示', "该名称已存在!");
+								}else{
+									$.messager.alert('提示', "修改失败!服务器异常!");
+								}
+							}
+						});
+					}
+				} ]
+			});
+		}
+		function searchCarMieage(value,name){
+			$('#carsMileageTable').datagrid({
+				pagination : true,
+				pageSize : 5,
+				pageList : [ 5, 10, 20, 50 ],
+				singleSelect : true,
+				fitColumns :true,
+				rownumbers:true,
+				height : 400,
+				width : 900, 
+				toolbar : [{
+					iconCls : 'icon-add',
+					text : '新增运营里程/日营业记录',
+					handler : function() {
+							addCarsMileage1();
+					}
+				},'-',
+					{
+						iconCls : 'icon-edit',
+						text : '修改',
+						handler : function() {
+							var row = $('#carsMileageTable').datagrid('getSelected');
+							if (row == null) {
+								$.messager.alert('提示','请选中行!');
+							} else {
+								updateCarsMileage(row);
+							}
+						}
+					} ,
+					'-',
+					 {
+						iconCls : 'icon-remove',
+						text : '删除',
+						handler : function() {
+							var row = $('#carsMileageTable').datagrid('getSelected');
+							if (row == null) {
+								$.messager.alert('提示','请选中行!');
+							} else {
+								deleteCarsMileage(row.carsMileageId);
+							}
+						}
+					} ],
+				columns : [ [
+				{
+					field : 'carsMileageId',
+					title : '编号'
+				} ,
+				{
+					field : 'carNumber',
+					title : '车牌号'
+				} ,
+				{
+					field : 'driverName',
+					title : '司机姓名'
+				},
+				{
+					field : 'mileage',
+					title : '里程/公里'
+				} , {
+					field : 'sales',
+					title : '营业额/元'
+				}, {
+					field : 'carId',
+					title : '车辆信息',
+					formatter:function(value,row,index){
+						return '<a href="cars/queryCarsById.action?carId='+row.carId+'" target="_blank" >查看</a>';
+					}
+				}  ] ],
+				url : 'carsMileage/queryLikeAll.action?'+name+'='+value
+			});
+		}
+	</script>
+	
+	<input id="ssCarMieage" class="easyui-searchbox" style="width:300px"
+	    data-options="searcher:searchCarMieage,prompt:'Please Input Value',menu:'#carMieageOptions'"></input>
+	<div id="carMieageOptions" style="width:120px">
+	    <div data-options="name:'carNumber',iconCls:'icon-ok'">车牌号</div>
+	    <div data-options="name:'driverName',iconCls:'icon-ok'">司机姓名</div>
+	</div>
+	<table id="carsMileageTable" style="width: 400px; height: 400px"></table>
+	<div id="carsMileageUpdate" style="display: none; padding: 20px">
+		<form method="post" id="myCarsMileageUpdateForm">
+			<table>
+				<tr>
+					<td>车辆编号:</td>
+					<td><input type="text" id="mileageCarId1" readonly="readonly" name="carsMileageId" /></td>
+				</tr>
+				<tr>
+					<td>里程:</td>
+					<td>
+						<input type="text" id="mileage1"  name="mileage"  class="easyui-numberbox" data-options="suffix:'公里'"  style="width:173px" required="required" />
+					</td>
+				</tr>
+				<tr>
+					<td>营业额:</td>
+					<td>
+						<input type="text" id="sales1"  name="sales"   class="easyui-numberbox" data-options="suffix:'元'"  style="width:173px" required="required" />
+					</td>
+				</tr>
+				<tr>
+					<td>车牌号:</td>
+					<td>
+						<input id="carsMileageCarId" name="carId"  style="width:173px" >  
+					</td>
+				</tr>
+				<tr>
+					<td>创建时间:</td>
+					<td><input class="easyui-datetimebox" name="createTime" data-options="required:true,showSeconds:false"  style="width:173px">  </td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</body>
+</html>
